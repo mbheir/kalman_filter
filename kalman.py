@@ -68,9 +68,9 @@ class Robot:
         self.Q = np.eye(4)
 
         # noise params for model
-        # self.W = W
-        # self.Q_ = self.Q @ self.W @ self.Q.T
-        self.Q_ = W
+        self.W = W
+        self.Q_ = self.Q @ self.W @ self.Q.T
+        # self.Q_ = np.zeros(shape=(4,4))
 
         # dh/dx (observation,state)
         self.C = np.array([
@@ -153,22 +153,22 @@ if __name__=="__main__":
     yaw_rate_traj = np.ones(SIM_TIME*imu_update_freq)*2*np.pi/SIM_TIME
 
     # Simulate noise
-    gps_noise = 1 #standardavvik
+    gps_variance = 3 #standardavvik
     acc_variance = 0.2 #m/s^2
     gyro_variance_degrees = 10
     gyro_variance_rad = gyro_variance_degrees / 180 * np.pi
-    noise_acc_signal = np.random.normal(loc=0,scale=acc_variance,size=SIM_TIME*imu_update_freq)
-    noise_yaw_rate_signal = np.random.normal(loc=0,scale=gyro_variance_rad,size=SIM_TIME*imu_update_freq)
+    noise_acc_signal = np.random.normal(loc=0,scale=np.sqrt(acc_variance),size=SIM_TIME*imu_update_freq)
+    noise_yaw_rate_signal = np.random.normal(loc=0,scale=np.sqrt(gyro_variance_rad),size=SIM_TIME*imu_update_freq)
 
     V = np.array([
-            [gps_noise,         0],
-            [0,         gps_noise]
-        ])
+            [gps_variance,         0],
+            [0,         gps_variance]
+        ]) * 1/gps_update_freq
     W = np.array([
-            [0, 0, 0, 0],
-            [0, 0, 0, 0],
-            [0, 0, np.sqrt(gyro_variance_rad), 0],
-            [0, 0, 0, np.sqrt(acc_variance)],
+            [0, 0,          0, 0],
+            [0, 0,          0, 0],
+            [0, 0, gyro_variance_rad, 0],
+            [0, 0,          0, acc_variance],
         ]) *1/imu_update_freq
 
     
@@ -203,10 +203,8 @@ if __name__=="__main__":
 
 
         # Simulate GPS 1Hz measurement by adding gaussian noise to true position
-        gps_measurement = robot.state_true[:2] + np.random.normal(loc=0,scale=gps_noise,size=2)
-        # print(f"true_coord={robot.state_true[:2]}")
-        # print(f"gps_coord={gps_measurement}\n")
-        
+        gps_measurement = robot.state_true[:2] + np.random.normal(loc=0,scale=np.sqrt(gps_variance),size=2)
+
         # Executing EKF Update, updating upon GPS measurement
         # 1 Hz
         state,cov = robot.EKF_update(x_prior=robot.state_mean,cov_prior=cov,z_measure=gps_measurement)
