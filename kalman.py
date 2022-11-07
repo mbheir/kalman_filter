@@ -1,4 +1,4 @@
-import numpy as np
+    import numpy as np
 import matplotlib.pyplot as plt
 np.set_printoptions(suppress=True)
 
@@ -200,6 +200,7 @@ if __name__=="__main__":
             # Also run for true state and dead reckoning for references
             robot.state_true = robot.motion_model(robot.state_true,acc,yaw_rate,dT=robot.dT_pred)
             robot.state_deadreck = robot.motion_model(robot.state_deadreck,acc+noise_acc,yaw_rate+noise_yaw_rate,dT=robot.dT_pred)
+            states_est = np.vstack((states_est,robot.state_mean))
 
 
         # Simulate GPS 1Hz measurement by adding gaussian noise to true position
@@ -228,7 +229,7 @@ if __name__=="__main__":
         plt.plot(states_deadreck[:,0],states_deadreck[:,1],"-k")
         plt.plot(gps_measurement[0],gps_measurement[1],"dg")
         plot_covariance_ellipse(robot.state_mean,robot.cov)
-        plt.pause(0.1)
+        # plt.pause(0.1)
 
 
     plt.show()
