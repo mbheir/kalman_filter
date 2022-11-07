@@ -1,4 +1,4 @@
-    import numpy as np
+import numpy as np
 import matplotlib.pyplot as plt
 np.set_printoptions(suppress=True)
 
@@ -141,6 +141,12 @@ class Robot:
         x = x_prior + K @ (z_measure - mt)
         cov = cov_prior - K @ S @ K.T
         return x,cov
+    
+    def IEKF_update(self,x_prior,cov_prior,z_measure):
+        S = self.C @ self.cov @ self.C.T + self.R_
+        D = self.cov @ self.C.T
+        K = D @ np.linalg.inv(S)
+        
 
 
 
@@ -153,7 +159,7 @@ if __name__=="__main__":
     yaw_rate_traj = np.ones(SIM_TIME*imu_update_freq)*2*np.pi/SIM_TIME
 
     # Simulate noise
-    gps_variance = 3 #standardavvik
+    gps_variance = 3 # standardavvik
     acc_variance = 0.2 #m/s^2
     gyro_variance_degrees = 10
     gyro_variance_rad = gyro_variance_degrees / 180 * np.pi
@@ -161,8 +167,8 @@ if __name__=="__main__":
     noise_yaw_rate_signal = np.random.normal(loc=0,scale=np.sqrt(gyro_variance_rad),size=SIM_TIME*imu_update_freq)
 
     V = np.array([
-            [gps_variance,         0],
-            [0,         gps_variance]
+            [gps_variance+1000,         0],
+            [0,         gps_variance+1000]
         ]) * 1/gps_update_freq
     W = np.array([
             [0, 0,          0, 0],
